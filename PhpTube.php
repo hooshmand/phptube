@@ -9,6 +9,12 @@
 
 class PhpTube
 {
+    static $mime_to_extension = array(
+        'video/webm' => '.webm',
+        'video/x-flv' => '.flv',
+        'video/mp4' => '.mp4',
+        'video/3gpp' => '.3gp'
+    );
 
     /**
      * Parses the youtube URL and returns error message or array of download links
@@ -16,54 +22,52 @@ class PhpTube
      * @param  $watchUrl the URL of the Youtube video
      * @return string|array the error message or the array of download links
      */
-    public function getDownloadLink($watchUrl)
+    public function getDownloadInfo($watchUrl)
     {
         //utf8 encode and convert "&"
         $html = utf8_encode($this->_getHtml($watchUrl));
         $html = str_replace("\u0026amp;", "&", $html);
 
-        //get format url
-        preg_match_all('/url_encoded_fmt_stream_map\=(.*)/', $html, $matches);
-        $formatUrl = urldecode($matches[1][0]);
+        preg_match('#yt.playerConfig = (\{.*\});#m', $html,$matches);
 
-        //split the format url into individual urls
-        $urls = preg_split('/url=/', $formatUrl);
+        if(!$matches) return FALSE;
 
-        $videoUrls = array();
+        $playerConfig = json_decode($matches[1]);
 
-        foreach ($urls as $url)
-        {
+        //print_r($playerConfig);
 
-            /*
-             *  Process the url and cut off the unnecessary data
-             */
-            $url = urldecode($url);
-            $urlparts = explode(";", $url);
-            $url = $urlparts[0];
-            $urlparts = explode(",", $url);
-            $url = $urlparts[0];
+        $title = $playerConfig->args->title;
+        $video_id = $playerConfig->args->video_id;
+        $image_host = parse_url(array_shift(explode('|',$playerConfig->args->storyboard_spec)), PHP_URL_HOST);
+        $thumbnail = "http://$image_host/vi/{$playerConfig->args->video_id}/default.jpg";
+        $thumbnail_hq = "http://$image_host/vi/$video_id/hqdefault.jpg"; 
 
-            /*
-             * Process type
-             */
+        $fmt_list = explode(',',$playerConfig->args->fmt_list);
+        $itag_resolution = array();
 
-            parse_str($url, $data);
-
-            if (isset($data['watermark']) || empty($url))
-            {
-                continue;
-            }
-            else
-            {
-            
-                if (!empty($data['type']) && !empty($data['quality']))
-                {
-                    $videoUrls[] = array("type" => $data['type'], "quality" => $data['quality'], "url" => $url);
-                }
-            }
+        foreach($fmt_list as $index=>$def){
+            $fmt_list[$index] = explode('/',$def);
+            $itag_resolution[$fmt_list[$index][0]] = $fmt_list[$index][1];
         }
 
-        return $videoUrls;
+        $url_encoded_fmt_stream_map = explode(',',$playerConfig->args->url_encoded_fmt_stream_map);
+
+        foreach($url_encoded_fmt_stream_map as $index=>$map){
+            parse_str($map,$url_encoded_fmt_stream_map[$index]);
+            $url_encoded_fmt_stream_map[$index]['resolution'] = $resolution = $itag_resolution[$url_encoded_fmt_stream_map[$index]['itag']];
+            $url_encoded_fmt_stream_map[$index]['file_extension'] = $file_ext = $this->get_file_extension_by_mime($url_encoded_fmt_stream_map[$index]['type']);
+            $url_encoded_fmt_stream_map[$index]['file_name'] = trim(preg_replace('#\s+#',' ',preg_replace('#\W+#', '_', $title)),'_') . "_{$resolution}" . $file_ext;
+        }
+
+        $download_links = $url_encoded_fmt_stream_map; 
+
+        return compact(
+            'title',
+            'video_id',
+            'thumbnail',
+            'thumbnail_hq',
+            'download_links'
+        );
     }
 
     /**
@@ -75,6 +79,10 @@ class PhpTube
      */
     private function _getHtml($url)
     {
+        if($_SERVER['HTTP_HOST']=='localhost'){
+            return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
+        }
+
         if (function_exists("curl_init"))
         {
 
@@ -89,4 +97,10 @@ class PhpTube
         }
     }
 
+    private function get_file_extension_by_mime($target_mime){
+        foreach (self::$mime_to_extension as $mime => $extension) {
+            if(stripos($target_mime, $mime)!==FALSE) return $extension;
+        }
+        return '.unknown';
+    }
 }

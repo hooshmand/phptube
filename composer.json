@@ -1,20 +1,20 @@
 {
-    "name": "masnun/phptube",
+    "name": "mnishihan/phptube",
     "description": "phptube allows scraping youtube and getting videos url for download",
     "type": "library",
     "keywords": ["youtube","video"],
-    "homepage": "https://github.com/masnun/phptube",
+    "homepage": "https://github.com/mnishihan/phptube",
     
     "authors": [
         {
-            "name": "Abu Ashraf Masnun",
-            "email": "masnun@gmail.com",
-            "homepage": "http://masnun.me"
+            "name": "M N Islam SHihan",
+            "email": "info@shihan.me",
+            "homepage": "http://shihan.me"
         }
     ],
     
     "support": {
-        "email": "masnun@gmail.com"
+        "email": "phptube@shihan.me"
     }, 
     
     "require": {
