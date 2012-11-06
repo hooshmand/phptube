@@ -34,11 +34,12 @@ class PhpTube
 
         $playerConfig = json_decode($matches[1]);
 
-        //print_r($playerConfig);
+        // print_r($playerConfig);
 
         $title = $playerConfig->args->title;
         $video_id = $playerConfig->args->video_id;
-        $image_host = parse_url(array_shift(explode('|',$playerConfig->args->storyboard_spec)), PHP_URL_HOST);
+        $storyboard_specs = explode('|',$playerConfig->args->storyboard_spec);
+        $image_host = parse_url(array_shift($storyboard_specs), PHP_URL_HOST);
         $thumbnail = "http://$image_host/vi/{$playerConfig->args->video_id}/default.jpg";
         $thumbnail_hq = "http://$image_host/vi/$video_id/hqdefault.jpg"; 
 
@@ -57,6 +58,13 @@ class PhpTube
             $url_encoded_fmt_stream_map[$index]['resolution'] = $resolution = $itag_resolution[$url_encoded_fmt_stream_map[$index]['itag']];
             $url_encoded_fmt_stream_map[$index]['file_extension'] = $file_ext = $this->get_file_extension_by_mime($url_encoded_fmt_stream_map[$index]['type']);
             $url_encoded_fmt_stream_map[$index]['file_name'] = trim(preg_replace('#\s+#',' ',preg_replace('#\W+#', '_', $title)),'_') . "_{$resolution}" . $file_ext;
+            $url_encoded_fmt_stream_map[$index]['url'] = $url_encoded_fmt_stream_map[$index]['url'] . "&" . http_build_query(array(
+                    "type"=>$url_encoded_fmt_stream_map[$index]['type'],
+                    "fallback_host"=>$url_encoded_fmt_stream_map[$index]['fallback_host'],
+                    "signature"=>$url_encoded_fmt_stream_map[$index]['sig'],
+                    "keepalive"=>"yes",
+                    "title"=>$title
+                ));
         }
 
         $download_links = $url_encoded_fmt_stream_map; 
@@ -79,9 +87,9 @@ class PhpTube
      */
     private function _getHtml($url)
     {
-        if($_SERVER['HTTP_HOST']=='localhost'){
-            return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
-        }
+        // if($_SERVER['HTTP_HOST']=='localhost'){
+        //     return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
+        // }
 
         if (function_exists("curl_init"))
         {

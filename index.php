@@ -37,7 +37,7 @@ if(count($_POST)>0){
 				<?php foreach ($download_info['download_links'] as $index=>$link_info):?>
 					<tr>
 						<td><?php echo $link_info['quality'];?></td>
-						<td><?php echo array_shift(explode(';',$link_info['type']));?></td>
+						<td><?php $link_types = explode(';',$link_info['type']); echo array_shift($link_types);?></td>
 						<td><?php echo $link_info['resolution'];?></td>
 						<td><a href="proxy.php?id=<?php echo $download_info['video_id']?>&index=<?php echo $index;?>" target="_blank">Download</a></td>
 					</tr>
