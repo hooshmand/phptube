@@ -55,9 +55,12 @@ class PhpTube
 
         foreach($url_encoded_fmt_stream_map as $index=>$map){
             parse_str($map,$url_encoded_fmt_stream_map[$index]);
+            $url_encoded_fmt_stream_map[$index]['file_extension'] = $file_ext = self::get_file_extension_by_mime($url_encoded_fmt_stream_map[$index]['type']);
+
             $url_encoded_fmt_stream_map[$index]['resolution'] = $resolution = $itag_resolution[$url_encoded_fmt_stream_map[$index]['itag']];
-            $url_encoded_fmt_stream_map[$index]['file_extension'] = $file_ext = $this->get_file_extension_by_mime($url_encoded_fmt_stream_map[$index]['type']);
-            $url_encoded_fmt_stream_map[$index]['file_name'] = trim(preg_replace('#\s+#',' ',preg_replace('#\W+#', '_', $title)),'_') . "_{$resolution}" . $file_ext;
+            
+            $url_encoded_fmt_stream_map[$index]['file_name'] = self::get_download_file_name($title,$file_ext,$resolution);
+
             $url_encoded_fmt_stream_map[$index]['url'] = $url_encoded_fmt_stream_map[$index]['url'] . "&" . http_build_query(array(
                     "type"=>$url_encoded_fmt_stream_map[$index]['type'],
                     "fallback_host"=>$url_encoded_fmt_stream_map[$index]['fallback_host'],
@@ -87,9 +90,9 @@ class PhpTube
      */
     private function _getHtml($url)
     {
-        // if($_SERVER['HTTP_HOST']=='localhost'){
-        //     return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
-        // }
+        if($_SERVER['HTTP_HOST']=='localhost'){
+            return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
+        }
 
         if (function_exists("curl_init"))
         {
@@ -105,10 +108,14 @@ class PhpTube
         }
     }
 
-    private function get_file_extension_by_mime($target_mime){
+    private static function get_file_extension_by_mime($target_mime){
         foreach (self::$mime_to_extension as $mime => $extension) {
             if(stripos($target_mime, $mime)!==FALSE) return $extension;
         }
         return '.unknown';
+    }
+
+    public static function get_download_file_name($title,$file_ext,$resolution=FALSE){
+        return trim(preg_replace('#\s+#',' ',preg_replace('#\W+#', '_', $title)),'_') . (!empty($resolution)?"_{$resolution}":"") . $file_ext;    
     }
 }
