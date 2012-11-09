@@ -90,9 +90,9 @@ class PhpTube
      */
     private function _getHtml($url)
     {
-        if($_SERVER['HTTP_HOST']=='localhost'){
-            return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
-        }
+        // if($_SERVER['HTTP_HOST']=='localhost'){
+        //     return file_get_contents(dirname(__FILE__) .'/sample_contents.html');
+        // }
 
         if (function_exists("curl_init"))
         {
