@@ -1,4 +1,8 @@
 <?php
+
+error_reporting(E_ALL);
+ini_set('display_errors',1);
+
 function findIndexByFileExtAndQuality($download_links,$file_extension,$quality){
 	foreach($download_links as $index=>$detail){
 		if($detail['file_extension']==$file_extension && $detail['quality']==$quality){
@@ -28,10 +32,29 @@ $download_info = $video_info['download_links'][$index];
 $target_fname = empty($_REQUEST['target_fname'])?$download_info['file_name']:(PhpTube::get_download_file_name($_REQUEST['target_fname'],$download_info['file_extension'],$download_info['resolution']));
 
 // die($download_info['url']);
+// 
+// 
+
+$file_path = dirname(__FILE__) . '/files/' . $target_fname;
+
+if(!file_exists($file_path)){
+	set_time_limit(0);
+	$fp = fopen($file_path, 'w');
+ 
+	$ch = curl_init($download_info['url']);
+	curl_setopt($ch, CURLOPT_FILE, $fp);
+	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+	curl_setopt($ch, CURLOPT_RETURN_TRANSFER, false);
+	curl_exec($ch);
+	curl_close($ch);
+	fclose($fp);	
+}
 
 header('Content-type: ' . $download_info['type']);
 header('Content-Disposition: attachment; filename="' . $target_fname . '"');
+header("Content-Length: " . filesize($file_path));
 
 if (ob_get_level()) ob_end_clean(); // this line is required to turn off default output buffering in php.ini
 
-readfile($download_info['url']);
+readfile($file_path);
+exit;

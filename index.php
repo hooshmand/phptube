@@ -39,7 +39,8 @@ if(count($_POST)>0){
 						<td><?php echo $link_info['quality'];?></td>
 						<td><?php $link_types = explode(';',$link_info['type']); echo array_shift($link_types);?></td>
 						<td><?php echo $link_info['resolution'];?></td>
-						<td><a href="proxy.php?id=<?php echo $download_info['video_id']?>&quality=<?php echo $link_info['quality'];?>&file_extension=<?php echo $link_info['file_extension'];?>" target="_blank">Download</a></td>
+						<td><a href="<?php echo $download_info['video_id']?>/<?php echo $link_info['quality'];?>/<?php echo $link_info['file_name'];?>" target="_blank">Download</a></td>
+						<!-- <td><a href="proxy.php?id=<?php echo $download_info['video_id']?>&quality=<?php echo $link_info['quality'];?>&file_extension=<?php echo $link_info['file_extension'];?>" target="_blank">Download</a></td> -->
 						<!-- <td><a href="proxy.php?id=<?php echo $download_info['video_id']?>&index=<?php echo $index;?>" target="_blank">Download</a></td> -->
 					</tr>
 				<?php endforeach;?>
