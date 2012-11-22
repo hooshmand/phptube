@@ -1,7 +1,7 @@
 <?php
 
-error_reporting(E_ALL);
-ini_set('display_errors',1);
+error_reporting(E_NONE);
+ini_set('display_errors',0);
 
 function findIndexByFileExtAndQuality($download_links,$file_extension,$quality){
 	foreach($download_links as $index=>$detail){
@@ -9,6 +9,13 @@ function findIndexByFileExtAndQuality($download_links,$file_extension,$quality){
 			return $index;
 		}
 	}
+        
+        foreach($download_links as $index=>$detail){
+		if($detail['file_extension']==$file_extension && $detail['quality']==$download_links[0]['quality']){
+			return $index;
+		}
+	}
+        
 	return 0;
 }
 
@@ -16,6 +23,7 @@ require_once 'PhpTube.php';
 $tube = new PhpTube();
 $id = $_REQUEST['id'];
 $watch_link = "https://www.youtube.com/watch?v=$id";
+
 $video_info = $tube->getDownloadInfo($watch_link);
 
 if(isset($_REQUEST['index'])){
@@ -28,12 +36,14 @@ else {
 	$index = 0;
 }
 
-$download_info = $video_info['download_links'][$index];
-$target_fname = empty($_REQUEST['target_fname'])?$download_info['file_name']:(PhpTube::get_download_file_name($_REQUEST['target_fname'],$download_info['file_extension'],$download_info['resolution']));
+$download_info = isset($video_info['download_links'][$index])?$video_info['download_links'][$index]:$video_info['download_links'][0];
 
-// die($download_info['url']);
-// 
-// 
+$target_fname = empty($_REQUEST['target_fname'])?$download_info['file_name']:(PhpTube::get_download_file_name($_REQUEST['target_fname'],$download_info['file_extension'],$download_info['resolution']));
+if((isset($_REQUEST['file_extension']) && $_REQUEST['file_extension'] != $download_info['file_extension']) OR (isset($_REQUEST['quality']) && $_REQUEST['quality'] != $download_info['quality'])){
+    $script_path = dirname($_SERVER['PHP_SELF']);
+    header("Location: $script_path/$id/{$download_info['quality']}/$target_fname");
+    die();
+}
 
 $file_path = dirname(__FILE__) . '/files/' . $target_fname;
 
